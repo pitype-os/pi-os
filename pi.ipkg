@@ -1,13 +1,11 @@
-package tests
+package pc
 authors = "Rafael"
 builddir = "build"
-executable= "kernel-tests"
-depends=pc,hedgehog
+executable= "kernel"
 homepage = "https://gitlab.com/pi-os/pi-os"
-main = Main
+main = Pi.Main
 maintainers = "Rafael"
 opts = "--cg refc"
-sourcedir = "./"
+sourcedir = "./kernel"
 sourceloc = "https://gitlab.com/pi-os/pi-os"
 version = 0.0.1
-

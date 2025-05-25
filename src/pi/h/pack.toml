@@ -1,5 +1,0 @@
-[custom.all.h]
-type = "local"
-path = "."
-ipkg = "h.ipkg"
-

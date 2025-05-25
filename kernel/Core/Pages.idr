@@ -1,9 +1,9 @@
-module H.Pages
+module Core.Pages
 
-import H.Addr
-import H.AdHocMem
-import H.Storable
-import H.Monad
+import Core.Addr
+import Core.AdHocMem
+import Core.Storable
+import Core.Monad
 ------------------------ INTERFACE -----------------------------------------
 
 data Page a = Ptr a 
@@ -16,8 +16,8 @@ pageSize = 4096
 
 -- From osblog
 
-zalloc : Page a -> H ()
-dealloc : Page a -> H ()
+zalloc : Page a -> Core ()
+dealloc : Page a -> Core ()
 
 ---------------------- PRIVATE IMPLEMENTATION FOLLOWS --------------------
 
@@ -40,21 +40,21 @@ numPages : Int
 numPages = cast {to=Int} $ (cast {to=Double} heapSize) / (cast {to=Double} pageSize)
 
 export
-pageinit : H ()
+pageinit : Core ()
 pageinit = helper numPages
   where 
-    clear : Int -> H () 
+    clear : Int -> Core () 
     clear page = poke (plusAddr heapStart (cast {to=Bits32} page)) 0
     
-    helper : Int -> H ()
+    helper : Int -> Core ()
     helper 0 = clear 0
     helper i = clear i >> helper (i-1)
 
 export
-alloc : Int -> H ()
+alloc : Int -> Core ()
 alloc pages = firstFreeContiguous 0 pages >>= takePages
   where 
-    isFreeContiguous : Int -> Int -> H Bool
+    isFreeContiguous : Int -> Int -> Core Bool
     isFreeContiguous page 0 = do
         val <- peek (plusAddr heapStart (cast {to=Bits32} page))
         pure (val == 0)
@@ -64,7 +64,7 @@ alloc pages = firstFreeContiguous 0 pages >>= takePages
         then isFreeContiguous page (size-1)
         else pure False
 
-    firstFreeContiguous : Int -> Int -> H (Maybe Int)
+    firstFreeContiguous : Int -> Int -> Core (Maybe Int)
     firstFreeContiguous page 1 = do
         val <- peek (plusAddr heapStart (cast {to=Bits32} page))
         if val == 0 
@@ -76,14 +76,14 @@ alloc pages = firstFreeContiguous 0 pages >>= takePages
            then pure (Just page)
            else firstFreeContiguous (page+1) size
 
-    takePage : Int -> H ()
+    takePage : Int -> Core ()
     takePage page =  poke (plusAddr heapStart (cast {to=Bits32} page)) 1
 
-    takePages : Maybe Int -> H ()
+    takePages : Maybe Int -> Core ()
     takePages Nothing = pure ()
     takePages (Just page) = helper page
 
-      where helper : Int -> H ()
+      where helper : Int -> Core ()
             helper n = if n <= page+pages
                        then takePage n >> helper (n+1)
                        else pure ()

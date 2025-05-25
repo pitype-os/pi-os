@@ -1,6 +1,6 @@
-module H.Storable
+module Core.Storable
 
-import H.Addr
+import Core.Addr
 
 public export
 interface Storable a where

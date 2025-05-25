@@ -1,9 +1,9 @@
 module PC.Uart
 
-import H.Addr
-import H.AdHocMem
-import H.Monad
-import H.Storable
+import Core.Addr
+import Core.AdHocMem
+import Core.Monad
+import Core.Storable
 
 UART : Ptr Char
 UART = plusAddr nullPtr 0x10000000
@@ -12,10 +12,10 @@ UART = plusAddr nullPtr 0x10000000
     nullPtr = (prim__castPtr prim__getNullAnyPtr)
 
 export
-println: String -> H ()
+println: String -> Core ()
 println xs = println' (unpack xs)
   where 
-    println': List Char -> H ()
+    println': List Char -> Core ()
     println' [] = poke UART '\n'
     println' (x :: xs) = do
       poke UART x

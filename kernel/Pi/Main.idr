@@ -1,11 +1,11 @@
-module PC.Main
+module Pi.Main
 
-import H.Monad
+import Core.Monad
+import Core.Pages
 import PC.Uart
-import H.Pages
 
 main : IO ()
-main = runH $ do
+main = runCore $ do
   println "Welcome to PI OS"
   println "Initialise the heap"
   pageinit
