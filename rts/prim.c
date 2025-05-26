@@ -56,7 +56,6 @@ Value *sysCodegen(void) { return (Value *)idris2_mkString("refc"); }
 
 Value *idris2_crash(Value *msg) {
   Value_String *str = (Value_String *)msg;
-//  print(str->str);
   exit(-1);
 }
 
