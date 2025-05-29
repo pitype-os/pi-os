@@ -4,6 +4,8 @@
 Value *idris2_cast_Int8_to_Integer(Value *input) {
   Value_Integer *retVal = idris2_mkInteger();
   mpz_set_si(retVal->i, idris2_vp_to_Int8(input));
+
+	return (Value *)retVal;
 }
 
 Value *idris2_cast_Int8_to_string(Value *input) {

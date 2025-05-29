@@ -10,6 +10,11 @@ Value *writeIORef(Value *, Value *, Value *, Value *);
 
 Value *sysCodegen(void);
 Value *idris2_crash(Value *msg);
+extern Value_String const idris2_predefined_osstring;
+extern Value_String const idris2_predefined_codegenstring;
+#define idris2_System_Info_prim__os() ((Value *)&idris2_predefined_osstring)
+#define idris2_System_Info_prim__codegen()                                     \
+  ((Value *)&idris2_predefined_codegenstring)
 
 // Array
 
@@ -65,5 +70,19 @@ size_t idris2_heap_size();
 extern char* HEAP_START;
 char* idris2_heap_start();
 
+extern char const idris2_constr_Int[];
+extern char const idris2_constr_Int8[];
+extern char const idris2_constr_Int16[];
+extern char const idris2_constr_Int32[];
+extern char const idris2_constr_Int64[];
+extern char const idris2_constr_Bits8[];
+extern char const idris2_constr_Bits16[];
+extern char const idris2_constr_Bits32[];
+extern char const idris2_constr_Bits64[];
+extern char const idris2_constr_Double[];
+extern char const idris2_constr_Integer[];
+extern char const idris2_constr_Char[];
+extern char const idris2_constr_String[];
+extern char const idris2_constr____gt[];
 
 
