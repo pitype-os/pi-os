@@ -1,5 +1,6 @@
 module Core.AdHocMem
 
+import Prelude
 import Core.Addr
 import Core.Monad
 import Core.Storable

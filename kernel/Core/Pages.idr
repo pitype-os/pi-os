@@ -1,5 +1,6 @@
 module Core.Pages
 
+import Prelude
 import Core.Addr
 import Core.AdHocMem
 import Core.Storable

@@ -1,5 +1,7 @@
 module Core.Monad
 
+import Prelude
+
 public export
 record Core a where
   constructor MkCore
