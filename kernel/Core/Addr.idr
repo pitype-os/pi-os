@@ -1,7 +1,5 @@
 module Core.Addr
 
-import Prelude
-
 %foreign "C:idris2_plusAddr_Bits8"
 plusAddrBits8: Ptr Bits8 -> Bits32 -> Ptr Bits8
 
