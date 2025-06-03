@@ -1,5 +1,7 @@
 module Pi.Main
 
+import Prelude
+
 import Core.Monad
 import Core.Pages
 import PC.Uart

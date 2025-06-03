@@ -1,5 +1,7 @@
 module PC.Uart
 
+import Prelude
+
 import Core.Addr
 import Core.AdHocMem
 import Core.Monad
