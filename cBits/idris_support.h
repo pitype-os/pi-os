@@ -1,5 +1,6 @@
 #include <runtime.h>
 
+// POINTER OPERATIONS
 int idris2_isNull(void *);
 void *idris2_getNull();
 
@@ -34,8 +35,11 @@ Bits64 idris2_readAddr_Bits64(Bits64 *p);
 Double idris2_readAddr_Double(Double *p);
 Char idris2_readAddr_Char(Char *p);
 
+
+// MEMORY OPERATIONS
 extern size_t HEAP_SIZE;
 size_t idris2_heap_size();
 
 extern char* HEAP_START;
 char* idris2_heap_start();
+
