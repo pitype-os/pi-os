@@ -10,6 +10,7 @@ BOOTOBJS:= $(BOOTSOURCES:%.s=%.o)
 
 all:
 	$(MAKE) -C boot/
+	pack install-deps
 	$(MAKE) -C cBits/
 	IDRIS2_CC=$(CC) IDRIS2_CFLAGS="$(CFLAGS)" pack build pi.ipkg
 	riscv64-unknown-elf-ld -T boot/linker.ld -L$(IDRIS_LIB) -L$(IDRIS_SUPPORT) -nostdlib build/exec/kernel.o  $(BOOTOBJS) -lidris2_urefc -lidris_support -o kernel.elf
