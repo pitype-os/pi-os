@@ -1,6 +1,5 @@
 module Core.Storable
 
-import Prelude
 import Core.Addr
 
 public export
