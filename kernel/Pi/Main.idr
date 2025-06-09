@@ -7,7 +7,7 @@ import PC.Uart
 
 main : IO ()
 main = runCore $ do
-  println "Welcome to PI OS"
+  println "Welcome to PI OS!"
   exit
 
 

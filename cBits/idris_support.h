@@ -43,3 +43,7 @@ size_t idris2_heap_size();
 extern char* HEAP_START;
 char* idris2_heap_start();
 
+// utils
+void print(char *str);
+char* itoa(int value, char* result, int base);
+
