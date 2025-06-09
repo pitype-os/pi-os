@@ -4,11 +4,21 @@ import Core.Addr
 import Core.AdHocMem
 import Core.Storable
 import Core.Monad
+
+import Librairies.Data.List
+
 ------------------------ INTERFACE -----------------------------------------
 
 data Page a = Ptr a 
 
+public export
 data PageBits = Empty | Taken | Last
+
+export
+Show PageBits where
+  show Empty = "Empty"
+  show Taken = "Taken"
+  show Last = "Last"
 
 export
 pageSize: Int
@@ -38,6 +48,10 @@ heapStart = prim__idris2_heap_start
 export
 numPages : Int
 numPages = cast {to=Int} $ (cast {to=Double} heapSize) / (cast {to=Double} pageSize)
+
+export
+pages : List PageBits
+pages = replicate numPages Empty
 
 
 
