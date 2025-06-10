@@ -5,7 +5,7 @@ import Core.AdHocMem
 import Core.Storable
 import Core.Monad
 
-import Librairies.Data.List
+import Data.List
 
 ------------------------ INTERFACE -----------------------------------------
 
@@ -51,7 +51,7 @@ numPages = cast {to=Int} $ (cast {to=Double} heapSize) / (cast {to=Double} pageS
 
 export
 pages : List PageBits
-pages = replicate numPages Empty
+pages = replicate (cast numPages) Empty
 
 
 
