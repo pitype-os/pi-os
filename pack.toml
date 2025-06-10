@@ -1,4 +1,4 @@
 [idris2]
 bootstrap = true
 url = "https://github.com/pitype-os/Idris2"
-commit = "b53fd2cc8e6e925ebd22375180aac1b6245d2b97"
+commit = "02e1b35b9faee9ffcea5bf04960994b9bc3779e9"
