@@ -3,6 +3,7 @@ authors = "Rafael"
 builddir = "build"
 executable= "kernel"
 homepage = "https://gitlab.com/pi-os/pi-os"
+depends = array
 main = Pi.Main
 maintainers = "Rafael"
 opts = "--cg urefc"
