@@ -1,38 +1,31 @@
 module Main
 
-import Data.C.Ptr 
-import Data.Linear.Ref1
-import Syntax.T1
-import Data.Vect
-
+import Data.IORef
+import Pages
 import Trap
 import Uart
-import Pages
 
-import Data.Fin
-import Data.Array.Index
-
-fromToList : List Bits8 -> List Bits8
-fromToList xs =
-  withCArray (length xs) $ \r => T1.do
-    writeVect r (fromList xs)
-
-    case isLT 3 (length xs) of
-      Yes prf => set r (natToFinLT 0) 50
-      _ => pure ()
-
-    v <- withIArray r toVect
-    pure (toList v)
-
-xs : List Bits8
-xs = [1,2,3,4]
+import Data.List
 
 main : IO ()
 main = do
   println "Welcome to PI-OS!"
   println "Initialize pages"
-  let init_pages = pages
-  println $ show $ fromToList xs
+  pagesRef <- newIORef pages
+  res <- alloc pagesRef 3
+  case res of 
+    Nothing => println "No memory available"
+    Just (pages,i) => do
+      println $ show i
+      println $ show $ take 10 pages
+
+  res <- alloc pagesRef 4
+  case res of 
+    Nothing => println "No memory available"
+    Just (pages,i) => do
+      println $ show i
+      println $ show $ take 10 pages
+
   println "Finish inialize pages"
   exit
 
