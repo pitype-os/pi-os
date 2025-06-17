@@ -2,7 +2,7 @@ IDRIS_LIB= $(shell pack data-path)/urefc
 IDRIS_SUPPORT=cBits
 
 CC := riscv64-unknown-elf-gcc
-CFLAGS=-fno-builtin -Wno-pointer-to-int-cast -c -mcmodel=medany -I$(IDRIS_LIB) -I$(IDRIS_SUPPORT)
+CFLAGS=-fno-builtin -c -mcmodel=medany -I$(IDRIS_LIB) -I$(IDRIS_SUPPORT)
 
 BOOTDIR = boot
 BOOTSOURCES := $(shell find $(BOOTDIR) -name '*.s')
@@ -13,7 +13,7 @@ all:
 	pack install-deps
 	$(MAKE) -C cBits/
 	IDRIS2_CC=$(CC) IDRIS2_CFLAGS="$(CFLAGS)" pack build pi.ipkg
-	riscv64-unknown-elf-ld -T boot/linker.ld -L$(IDRIS_LIB) -L$(IDRIS_SUPPORT) -nostdlib build/exec/kernel.o  $(BOOTOBJS) --whole-archive -lidris2_urefc -lidris_support -o kernel.elf
+	riscv64-unknown-elf-ld -T boot/linker.ld -L$(IDRIS_LIB) -L$(IDRIS_SUPPORT) -L$(shell pack libs-path | tr ':' '\n' | grep '/cptr/') -nostdlib build/exec/kernel.o  $(BOOTOBJS) --whole-archive -lidris2_urefc -lcptr-idris -lidris_support -o kernel.elf
  
 kernel:
 	$(CC) $(CFLAGS) build/exec/kernel.c -c -o build/exec/kernel.o

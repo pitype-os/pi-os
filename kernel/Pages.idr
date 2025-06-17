@@ -1,12 +1,7 @@
-module Core.Pages
+module Pages
 
-import Core.Addr
-import Core.AdHocMem
-import Core.Storable
-import Core.Monad
 ------------------------ INTERFACE -----------------------------------------
 
-data Page a = Ptr a 
 
 data PageBits = Empty | Taken | Last
 
@@ -16,8 +11,8 @@ pageSize = 4096
 
 -- From osblog
 
-zalloc : Page a -> Core ()
-dealloc : Page a -> Core ()
+zalloc : Page a -> IO ()
+dealloc : Page a -> UI ()
 
 ---------------------- PRIVATE IMPLEMENTATION FOLLOWS --------------------
 
@@ -29,10 +24,10 @@ heapSize : Int
 heapSize = prim__idris2_heap_size
 
 %foreign "C:idris2_heap_start"
-prim__idris2_heap_start: Ptr Bits8
+prim__idris2_heap_start: AnyPtr
 
 export
-heapStart : Ptr Bits8
+heapStart : AnyPtr
 heapStart = prim__idris2_heap_start
 
 export
