@@ -11,8 +11,8 @@ pageSize = 4096
 
 -- From osblog
 
-zalloc : Page a -> IO ()
-dealloc : Page a -> UI ()
+--zalloc : Page a -> IO ()
+--dealloc : Page a -> UI ()
 
 ---------------------- PRIVATE IMPLEMENTATION FOLLOWS --------------------
 
@@ -33,6 +33,8 @@ heapStart = prim__idris2_heap_start
 export
 numPages : Int
 numPages = cast {to=Int} $ (cast {to=Double} heapSize) / (cast {to=Double} pageSize)
+
+
 
 
 
