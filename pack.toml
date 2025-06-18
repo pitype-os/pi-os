@@ -1,7 +1,7 @@
 [custom.all.cptr]
 type = "github"
 url = "https://github.com/pitype-os/idris2-cptr"
-commit = "bd58c6cffa8d46440a234b69cec816830864a7b9"
+commit = "b5dd445c4d71ae96942ef0f7c88f05f6fbc3b127"
 ipkg = "cptr.ipkg"
 
 [idris2]
