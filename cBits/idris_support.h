@@ -8,8 +8,8 @@ void *idris2_getNull();
 extern size_t HEAP_SIZE;
 size_t idris2_heap_size();
 
-extern char* HEAP_START;
-char* idris2_heap_start();
+extern size_t HEAP_START;
+size_t idris2_heap_start();
 
 // utils
 void print(char *str);
