@@ -7,4 +7,4 @@ ipkg = "cptr.ipkg"
 [idris2]
 bootstrap = true
 url = "https://github.com/pitype-os/Idris2"
-commit = "6dbff908544229b55c72a700706d1eeeb29b9c92"
+commit = "10f4eee32cfe1a9676950b815b6b13a5636cb6a6"
