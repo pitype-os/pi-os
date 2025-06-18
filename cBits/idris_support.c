@@ -4,6 +4,7 @@
 
 int idris2_isNull(void *ptr) { return (ptr == NULL); }
 void *idris2_getNull() { return NULL; }
+size_t idris2_anyptr_nat(void *ptr) { return ptr; }
 
 // MEMORY OPERATIONS
 

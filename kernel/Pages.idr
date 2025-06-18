@@ -1,7 +1,11 @@
 module Pages
 
+import Data.C.Ptr
 import Data.List
 import Data.IORef
+
+import Uart
+import Trap
 
 public export
 data PageBits = Empty | Taken | Last
@@ -13,15 +17,23 @@ Show PageBits where
   show Last = "Last"
 
 export
-pageSize: Int
+pageSize: Nat
 pageSize = 4096
 
+-- TODO : Replace Int with Nat. Currently Nat fail for unknown reason
 %foreign "C:idris2_heap_size"
-prim__idris2_heap_size: Int
+prim__idris2_heap_size: Int 
 
 export
-heapSize : Int
-heapSize = prim__idris2_heap_size
+heapSize : Nat 
+heapSize = cast prim__idris2_heap_size
+
+%foreign "C:idris2_anyptr_nat"
+prim_cast_anyptr_nat : AnyPtr -> Int
+
+export
+cast_AnyPtrNat: AnyPtr -> Nat 
+cast_AnyPtrNat ptr = cast $ prim_cast_anyptr_nat ptr
 
 %foreign "C:idris2_heap_start"
 prim__idris2_heap_start: AnyPtr
@@ -31,23 +43,29 @@ heapStart : AnyPtr
 heapStart = prim__idris2_heap_start
 
 export
-numPages : Int
-numPages = cast {to=Int} $ (cast {to=Double} heapSize) / (cast {to=Double} pageSize)
+numPages : Nat
+numPages = cast {to=Nat} $ (cast {to=Double} heapSize) / (cast {to=Double} pageSize)
 
 export
 pages : List PageBits
-pages = replicate (cast 10) Empty
+pages = replicate (cast numPages) Empty
 
 export
-alloc : IORef (List PageBits) -> Nat -> IO (Maybe (List PageBits, Nat))
-alloc ref Z = pure Nothing
+alloc : IORef (List PageBits) -> Nat -> IO AnyPtr
+alloc ref Z = do
+  println "Cannot allocate size of 0"
+  exit
+  pure heapStart
 alloc ref (S size) = do
   pages <- readIORef ref
   case getFirstFreeSpace pages [] 0 of
-       Nothing => pure Nothing
+       Nothing => do
+        println "No memory available"
+        exit
+        pure heapStart
        Just (pages, location) => do
          writeIORef ref pages
-         pure $ Just (pages, location)
+         pure $ prim__inc_ptr heapStart (cast pageSize) (cast location)
 
   where
     isFree : List PageBits -> Nat -> Bool
@@ -63,8 +81,71 @@ alloc ref (S size) = do
     getFirstFreeSpace [] _ _ = Nothing
     getFirstFreeSpace (x::xs) res location = 
       if isFree (x::xs) size
-         then Just (reverse res ++ replicate size Taken ++ Last::drop size xs,location)
+         then Just (reverse res ++ replicate size Taken ++ Last::drop size xs, location)
          else getFirstFreeSpace xs (x::res) (location+1)
+
+export
+dealloc : IORef (List PageBits) -> AnyPtr -> IO ()
+dealloc ref ptr = do
+  let heapStartAddr = cast_AnyPtrNat heapStart
+  let ptrAddr = cast_AnyPtrNat ptr
+  let pageNum = cast {to=Nat} $ ((cast {to=Double} ptrAddr) - (cast {to=Double} heapStartAddr)) / (cast {to=Double} pageSize)
+  pages <- readIORef ref
+  free pages [] >>= writeIORef ref
+
+  where
+    free : List PageBits -> List PageBits -> IO (List PageBits)
+    free [] _ = do
+      println "Couldn't free"
+      exit
+      pure []
+    free (Last::ps) res = pure $ res ++ (Empty::ps) 
+    free (p::ps) rest = free ps (Empty::rest)
+
+export
+zalloc : IORef (List PageBits) -> Nat -> IO AnyPtr
+zalloc ref size = do
+  ptr <- alloc ref size
+  zeroPages ptr size
+  pure ptr
+
+  where
+    zero : AnyPtr -> Nat -> IO ()
+    zero ptr Z = setPtr ptr $ cast {to=Bits8} 0
+    zero ptr (S n) = do
+      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
+      zero ptr n
+
+    zeroPages : AnyPtr -> Nat -> IO ()
+    zeroPages ptr Z = zero ptr pageSize
+    zeroPages ptr (S n) = do
+      zero ptr pageSize
+      zeroPages ptr n
+
+export
+testPages : IO ()
+testPages = do
+  println "Test pages"
+  pagesRef <- newIORef pages
+  println "Allocate 3 pages and set the first bit to 4"
+  ptr <- alloc pagesRef 3
+  readIORef pagesRef >>= println . show . take 10
+  setPtr ptr $ cast {to=Bits8} 4
+  val <- deref {a=Bits8} ptr
+  println $ show val
+  dealloc pagesRef ptr
+
+  println "Allocate 4 pages and set the first bit to 2"
+  ptr <- zalloc pagesRef 4
+  readIORef pagesRef >>= println . show . take 10
+  setPtr ptr $ cast {to=Bits8} 2
+  val <- deref {a=Bits8} ptr
+  println $ show val
+  dealloc pagesRef ptr
+  println "Finish test pages"
+
+
+
 
 
 
