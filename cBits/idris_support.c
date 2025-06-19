@@ -4,7 +4,12 @@
 
 int idris2_isNull(void *ptr) { return (ptr == NULL); }
 void *idris2_getNull() { return NULL; }
-size_t idris2_anyptr_nat(void *ptr) { return (size_t) ptr; }
+
+Value* idris2_anyptr_nat(void *p) {
+	Value_Integer *retVal = idris2_mkInteger();
+	mpz_set_si(retVal->i,p);
+	return (Value *)retVal;
+}
 
 // MEMORY OPERATIONS
 
@@ -44,7 +49,7 @@ char* itoa(int value, char* result, int base) {
     // Apply negative sign
     if (tmp_value < 0) *ptr++ = '-';
     *ptr-- = '\0';
-  
+
     // Reverse the string
     while(ptr1 < ptr) {
         tmp_char = *ptr;
@@ -53,3 +58,4 @@ char* itoa(int value, char* result, int base) {
     }
     return result;
 }
+
