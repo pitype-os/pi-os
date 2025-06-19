@@ -20,20 +20,19 @@ export
 pageSize: Nat
 pageSize = 4096
 
--- TODO : Replace Int with Nat. Currently Nat fail for unknown reason
-%foreign "C:idris2_heap_size"
-prim__idris2_heap_size: Int 
-
-export
-heapSize : Nat 
-heapSize = cast prim__idris2_heap_size
-
 %foreign "C:idris2_anyptr_nat"
-prim_cast_anyptr_nat : AnyPtr -> Int
+prim_cast_anyptr_nat : AnyPtr -> Nat
 
 export
 cast_AnyPtrNat: AnyPtr -> Nat 
-cast_AnyPtrNat ptr = cast $ prim_cast_anyptr_nat ptr
+cast_AnyPtrNat = prim_cast_anyptr_nat
+
+%foreign "C:idris2_heap_size"
+prim__idris2_heap_size: AnyPtr 
+
+export
+heapSize : Nat 
+heapSize = cast_AnyPtrNat prim__idris2_heap_size
 
 %foreign "C:idris2_heap_start"
 prim__idris2_heap_start: AnyPtr
@@ -90,8 +89,9 @@ dealloc ref ptr = do
   let heapStartAddr = cast_AnyPtrNat heapStart
   let ptrAddr = cast_AnyPtrNat ptr
   let pageNum = cast {to=Nat} $ ((cast {to=Double} ptrAddr) - (cast {to=Double} heapStartAddr)) / (cast {to=Double} pageSize)
+  println $ "NumPage : " ++ show pageNum
   pages <- readIORef ref
-  free pages [] >>= writeIORef ref
+  free (drop pageNum pages) [] >>= \p => writeIORef ref (take pageNum pages ++ p)
 
   where
     free : List PageBits -> List PageBits -> IO (List PageBits)
@@ -130,7 +130,7 @@ testPages = do
   println "Allocate 3 pages and set the first bit to 4"
   ptr <- alloc pagesRef 3
   readIORef pagesRef >>= println . show . take 10
-  setPtr ptr $ cast {to=Bits8} 4
+  setPtr ptr $ cast {to=Bits8} 15
   val <- deref {a=Bits8} ptr
   println $ show val
   dealloc pagesRef ptr
@@ -142,6 +142,7 @@ testPages = do
   val <- deref {a=Bits8} ptr
   println $ show val
   dealloc pagesRef ptr
+  
   println "Finish test pages"
 
 
