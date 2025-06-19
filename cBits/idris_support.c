@@ -7,7 +7,7 @@ void *idris2_getNull() { return NULL; }
 
 Value* idris2_anyptr_nat(void *p) {
 	Value_Integer *retVal = idris2_mkInteger();
-	mpz_set_si(retVal->i,p);
+	mpz_set_si(retVal->i,(int)p);
 	return (Value *)retVal;
 }
 
