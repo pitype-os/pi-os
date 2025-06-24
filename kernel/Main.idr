@@ -11,6 +11,7 @@ import Data.List
 main : IO ()
 main = do
   println "Welcome to PI-OS!"
+  testPages
   exit
 
 
