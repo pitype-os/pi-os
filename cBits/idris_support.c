@@ -16,6 +16,18 @@ Value* idris2_anyptr_nat(void *p) {
 size_t idris2_heap_size() { return HEAP_SIZE; }
 size_t idris2_heap_start() { return HEAP_START; }
 
+// Kernel init
+size_t kinit() {
+  Value *closure_0 = (Value *)idris2_mkClosure((Value *(*)())Main_kinit, 1, 1);
+                                                            
+  Value * var_0 = closure_0;                               
+  Value *closure_1 = (Value *)idris2_mkClosure((Value *(*)())PrimIO_unsafePerformIO, 1, 1);
+  ((Value_Closure*)closure_1)->args[0] = var_0;
+
+	Value_Integer *ret = (Value_Integer *)idris2_trampoline(closure_0);
+	return (size_t)mpz_get_lsb(ret->i,32);
+}
+
 // utils
 
 char *UART=(char*) 0x10000000;
