@@ -7,6 +7,7 @@ import Data.Vect
 
 import Uart
 import Trap
+import Debug
 
 public export
 data PageBits = Empty | Taken | Last
@@ -50,6 +51,9 @@ export
 pages : List PageBits
 pages = replicate (cast numPages) Empty
 
+allocStart : AnyPtr
+allocStart = prim__inc_ptr heapStart (cast numPages) 1
+
 export
 alloc : IORef (List PageBits) -> Nat -> IO AnyPtr
 alloc ref Z = do
@@ -65,7 +69,7 @@ alloc ref (S size) = do
         pure heapStart
        Just (pages, location) => do
          writeIORef ref pages
-         pure $ prim__inc_ptr heapStart (cast pageSize) (cast location)
+         pure $ prim__inc_ptr allocStart (cast pageSize) (cast location)
 
   where
     isFree : List PageBits -> Nat -> Bool
@@ -87,9 +91,9 @@ alloc ref (S size) = do
 export
 dealloc : IORef (List PageBits) -> AnyPtr -> IO ()
 dealloc ref ptr = do
-  let heapStartAddr = cast_AnyPtrNat heapStart
+  let allocStartAddr = cast_AnyPtrNat allocStart
   let ptrAddr = cast_AnyPtrNat ptr
-  let pageNum = cast {to=Nat} $ ((cast {to=Double} ptrAddr) - (cast {to=Double} heapStartAddr)) / (cast {to=Double} pageSize)
+  let pageNum = cast {to=Nat} $ ((cast {to=Double} ptrAddr) - (cast {to=Double} allocStartAddr)) / (cast {to=Double} pageSize)
   println $ "NumPage : " ++ show pageNum
   pages <- readIORef ref
   free (drop pageNum pages) [] >>= \p => writeIORef ref (take pageNum pages ++ p)
@@ -114,7 +118,7 @@ zalloc ref size = do
     zero : AnyPtr -> Nat -> IO ()
     zero ptr Z = setPtr ptr $ cast {to=Bits8} 0
     zero ptr (S n) = do
-      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
+      setPtr (prim__inc_ptr allocStart (cast n) 1) $ cast {to=Bits8} 0
       zero ptr n
 
     zeroPages : AnyPtr -> Nat -> IO ()
@@ -123,18 +127,81 @@ zalloc ref size = do
       zero ptr pageSize
       zeroPages ptr n
 
+savePage : IORef (List PageBits) -> IO ()
+savePage ref = do
+  pages <- readIORef ref
+  save pages 0
+
+  where 
+    save : List PageBits -> Nat -> IO ()
+    save [] _ = pure ()
+    save (x::xs) n = 
+      case x of 
+        Empty => do
+          println (show n)
+          save xs (n+1)
+        Taken => do
+          println (show n)
+          save xs (n+1)
+        Last => do
+          println (show n)
+          save xs (n+1)
+
+    --  save xs (n+1)
+   -- save (Empty::xs) n = do
+    --  setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
+   --   trace (show n) (save xs (n+1))
+   -- save (Taken::xs) n = do
+    --  setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 1
+   --   trace (show n) (save xs (n+1))
+   -- save (Last::xs) n = do
+     -- setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 2
+    --  trace (show n) (save xs (n+1))
+
+getPages :  IO (IORef (List PageBits))
+getPages = do
+  pages <- read numPages
+  newIORef pages
+
+  where
+    read : Nat -> IO (List PageBits)
+    read Z = do
+      val <- deref {a=Bits8} heapStart
+      case val of
+        1 => pure (Taken::[])
+        2 => pure (Last::[])
+        _ => pure (Empty::[]) 
+    read (S n) = do
+      let ptr = (prim__inc_ptr heapStart (cast n) 1)
+      val <- deref {a=Bits8} ptr
+      case val of
+        1 => do
+          xs <- read n
+          pure (Taken::xs)
+        2 => do
+          xs <- read n
+          pure (Last::xs)
+        _ => do
+          xs <- read n
+          pure (Empty::xs)
+
+
+
 export
 testPages : IO ()
 testPages = do
   println "Test pages"
   pagesRef <- newIORef pages
+  pages' <- readIORef pagesRef
+  println $ show $ length pages'
+  println $ show $ take 4671 pages'
   println "Allocate 3 pages and set the first bit to 4"
   ptr <- alloc pagesRef 3
   readIORef pagesRef >>= println . show . take 10
   setPtr ptr $ cast {to=Bits8} 15
   val <- deref {a=Bits8} ptr
   println $ show val
-  dealloc pagesRef ptr
+--  dealloc pagesRef ptr
 
   println "Allocate 4 pages and set the first bit to 2"
   ptr <- zalloc pagesRef 4
@@ -142,7 +209,8 @@ testPages = do
   setPtr ptr $ cast {to=Bits8} 2
   val <- deref {a=Bits8} ptr
   println $ show val
-  dealloc pagesRef ptr
+  --dealloc pagesRef ptr
+--  savePage pagesRef
   
   println "Finish test pages"
 
