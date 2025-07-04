@@ -8,9 +8,14 @@ import Uart
 
 import Data.List
 
+%export "urefc:Main_kinit"
+kinit : IO Nat
+kinit = pure 5
+
 main : IO ()
 main = do
   println "Welcome to PI-OS!"
+  testPages
   exit
 
 
