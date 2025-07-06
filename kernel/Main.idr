@@ -17,6 +17,9 @@ kinit = do
 main : IO ()
 main = do
   println "Welcome to PI-OS!"
+  pagesRef <- getPages
+  pages <- readIORef pagesRef
+  println $ show $ take 10 pages
   exit
 
 

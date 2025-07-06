@@ -77,6 +77,11 @@ _start:
 	# with the previous bits.
 	li		t0, 0b11 << 11
 	csrw	mstatus, t0
+	# Enable FPU: set FS field in mstatus to 0b01 (Initial) or 0b11 (Dirty)
+	csrr	t0, mstatus
+	li		t1, (1 << 13)        # FS = 0b01 (Initial)
+	or		t0, t0, t1
+	csrw mstatus, t0
 	la		t1, main
 	csrw	mepc, t1
 	# Setting `mideleg` (machine interrupt delegate) register:

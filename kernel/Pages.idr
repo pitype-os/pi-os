@@ -59,14 +59,14 @@ alloc : IORef (List PageBits) -> Nat -> IO AnyPtr
 alloc ref Z = do
   println "Cannot allocate size of 0"
   exit
-  pure heapStart
+  pure allocStart
 alloc ref (S size) = do
   pages <- readIORef ref
   case getFirstFreeSpace pages [] 0 of
        Nothing => do
         println "No memory available"
         exit
-        pure heapStart
+        pure allocStart
        Just (pages, location) => do
          writeIORef ref pages
          pure $ prim__inc_ptr allocStart (cast pageSize) (cast location)
@@ -134,43 +134,26 @@ savePage ref = do
 
   where 
     save : List PageBits -> Nat -> IO ()
-    save [] _ = pure ()
-    save (x::xs) n = 
-      case x of 
-        Empty => do
-          println (show n)
-          save xs (n+1)
-        Taken => do
-          println (show n)
-          save xs (n+1)
-        Last => do
-          println (show n)
-          save xs (n+1)
+    save [] n = pure ()
+    save (Empty::xs) n = do
+      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
+      save xs (n+1)
+    save (Taken::xs) n = do
+      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 1
+      save xs (n+1)
+    save (Last::xs) n = do
+      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 2
+      save xs (n+1)
 
-    --  save xs (n+1)
-   -- save (Empty::xs) n = do
-    --  setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
-   --   trace (show n) (save xs (n+1))
-   -- save (Taken::xs) n = do
-    --  setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 1
-   --   trace (show n) (save xs (n+1))
-   -- save (Last::xs) n = do
-     -- setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 2
-    --  trace (show n) (save xs (n+1))
-
+export
 getPages :  IO (IORef (List PageBits))
 getPages = do
   pages <- read numPages
-  newIORef pages
+  newIORef (reverse pages)
 
   where
     read : Nat -> IO (List PageBits)
-    read Z = do
-      val <- deref {a=Bits8} heapStart
-      case val of
-        1 => pure (Taken::[])
-        2 => pure (Last::[])
-        _ => pure (Empty::[]) 
+    read Z = pure []
     read (S n) = do
       let ptr = (prim__inc_ptr heapStart (cast n) 1)
       val <- deref {a=Bits8} ptr
@@ -185,8 +168,6 @@ getPages = do
           xs <- read n
           pure (Empty::xs)
 
-
-
 export
 testPages : IO ()
 testPages = do
@@ -194,14 +175,14 @@ testPages = do
   pagesRef <- newIORef pages
   pages' <- readIORef pagesRef
   println $ show $ length pages'
-  println $ show $ take 4671 pages'
+ -- println $ show $ take 30053 pages'
   println "Allocate 3 pages and set the first bit to 4"
   ptr <- alloc pagesRef 3
   readIORef pagesRef >>= println . show . take 10
   setPtr ptr $ cast {to=Bits8} 15
   val <- deref {a=Bits8} ptr
   println $ show val
---  dealloc pagesRef ptr
+ -- dealloc pagesRef ptr
 
   println "Allocate 4 pages and set the first bit to 2"
   ptr <- zalloc pagesRef 4
@@ -209,8 +190,9 @@ testPages = do
   setPtr ptr $ cast {to=Bits8} 2
   val <- deref {a=Bits8} ptr
   println $ show val
-  --dealloc pagesRef ptr
---  savePage pagesRef
+  dealloc pagesRef ptr
+  savePage pagesRef
+  
   
   println "Finish test pages"
 
