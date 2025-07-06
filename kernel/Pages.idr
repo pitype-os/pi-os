@@ -96,7 +96,7 @@ dealloc ref ptr = do
   let pageNum = cast {to=Nat} $ ((cast {to=Double} ptrAddr) - (cast {to=Double} allocStartAddr)) / (cast {to=Double} pageSize)
   println $ "NumPage : " ++ show pageNum
   pages <- readIORef ref
-  free (drop pageNum pages) [] >>= \p => writeIORef ref (take pageNum pages ++ p)
+  free (drop pageNum pages) [] >>= \p => writeIORef ref (take pageNum pages ++ p ++ (drop (pageNum + length p) pages))
 
   where
     free : List PageBits -> List PageBits -> IO (List PageBits)
@@ -175,14 +175,15 @@ testPages = do
   pagesRef <- newIORef pages
   pages' <- readIORef pagesRef
   println $ show $ length pages'
- -- println $ show $ take 30053 pages'
   println "Allocate 3 pages and set the first bit to 4"
   ptr <- alloc pagesRef 3
   readIORef pagesRef >>= println . show . take 10
   setPtr ptr $ cast {to=Bits8} 15
   val <- deref {a=Bits8} ptr
   println $ show val
- -- dealloc pagesRef ptr
+  p' <- readIORef pagesRef
+  println $ show $ length p'
+  dealloc pagesRef ptr
 
   println "Allocate 4 pages and set the first bit to 2"
   ptr <- zalloc pagesRef 4
@@ -190,10 +191,13 @@ testPages = do
   setPtr ptr $ cast {to=Bits8} 2
   val <- deref {a=Bits8} ptr
   println $ show val
+  p'' <- readIORef pagesRef
+  println $ show $ length p''
+
   dealloc pagesRef ptr
+
   savePage pagesRef
-  
-  
+
   println "Finish test pages"
 
 
