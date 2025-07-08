@@ -115,20 +115,20 @@ zalloc ref size = do
   pure ptr
 
   where
-    zero : AnyPtr -> Nat -> IO ()
-    zero ptr Z = setPtr ptr $ cast {to=Bits8} 0
-    zero ptr (S n) = do
-      setPtr (prim__inc_ptr allocStart (cast n) 1) $ cast {to=Bits8} 0
-      zero ptr n
+    zero : AnyPtr -> Nat -> Nat -> IO ()
+    zero ptr Z location = pure ()
+    zero ptr (S n) location = do
+      setPtr ptr $ cast {to=Bits8} 0
+      zero (prim__inc_ptr ptr (cast n) (cast location))  n location
 
     zeroPages : AnyPtr -> Nat -> IO ()
-    zeroPages ptr Z = zero ptr pageSize
+    zeroPages ptr Z = pure ()
     zeroPages ptr (S n) = do
-      zero ptr pageSize
+      zero ptr pageSize n
       zeroPages ptr n
 
-savePage : IORef (List PageBits) -> IO ()
-savePage ref = do
+savePages : IORef (List PageBits) -> IO ()
+savePages ref = do
   pages <- readIORef ref
   save pages 0
 
@@ -136,14 +136,10 @@ savePage ref = do
     save : List PageBits -> Nat -> IO ()
     save [] n = pure ()
     save (Empty::xs) n = do
-      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
+     -- setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 0
       save xs (n+1)
-    save (Taken::xs) n = do
-      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 1
-      save xs (n+1)
-    save (Last::xs) n = do
-      setPtr (prim__inc_ptr heapStart (cast n) 1) $ cast {to=Bits8} 2
-      save xs (n+1)
+    save (Taken::xs) n = save xs (n+1)
+    save (Last::xs) n =  save xs (n+1)
 
 export
 getPages :  IO (IORef (List PageBits))
@@ -158,10 +154,10 @@ getPages = do
       let ptr = (prim__inc_ptr heapStart (cast n) 1)
       val <- deref {a=Bits8} ptr
       case val of
-        1 => do
+        2 => do
           xs <- read n
           pure (Taken::xs)
-        2 => do
+        3 => do
           xs <- read n
           pure (Last::xs)
         _ => do
@@ -173,7 +169,33 @@ testPages : IO ()
 testPages = do
   println "Test pages"
   pagesRef <- newIORef pages
-  pages' <- readIORef pagesRef
+  let ptrAddr = cast_AnyPtrNat heapStart
+  println $ show ptrAddr
+  savePages pagesRef
+  println "Finish test pages"
+
+data EntryBits = 
+    None 
+  | Valid 
+  | Read 
+  | Write 
+  | Execute 
+  | User 
+  | Global
+  | Access
+  | Dirty
+
+  -- Convenience combinations
+  | ReadWrite
+  | ReadExecute
+  | ReadWriteExecute
+
+  -- User Convenience Combinations
+  | UserReadWrite
+  | UserReadExecute
+  | UserReadWriteExecute
+
+{-
   println $ show $ length pages'
   println "Allocate 3 pages and set the first bit to 4"
   ptr <- alloc pagesRef 3
@@ -196,31 +218,7 @@ testPages = do
 
   dealloc pagesRef ptr
 
-  savePage pagesRef
-
-  println "Finish test pages"
-
-
-data EntryBits = 
-    None 
-  | Valid 
-  | Read 
-  | Write 
-  | Execute 
-  | User 
-  | Global
-  | Access
-  | Dirty
-
-  -- Convenience combinations
-  | ReadWrite
-  | ReadExecute
-  | ReadWriteExecute
-
-  -- User Convenience Combinations
-  | UserReadWrite
-  | UserReadExecute
-  | UserReadWriteExecute
+-}
 
 
 map : 
