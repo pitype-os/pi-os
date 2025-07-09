@@ -14,18 +14,80 @@ Value* idris2_anyptr_nat(void *p) {
 // MEMORY OPERATIONS
 
 size_t idris2_heap_size() { return HEAP_SIZE; }
-size_t idris2_heap_start() { return HEAP_START; }
+char* idris2_heap_start() { return HEAP_START; }
 
 // Kernel init
 size_t kinit() {
-  Value *closure_0 = (Value *)idris2_mkClosure((Value *(*)())Main_kinit, 1, 1);
+//  char str[100];
+//  ptrtoa(HEAP_START, str);
+//  print(str);
+  print("HELLO");
+
+    char str[100];
+
+    itoa(MALLOC_DIRECTION, str,10);
+    print(str);
+
+    print("BSS START");
+    ptrtoa(BSS_START, str);
+    print(str);
+
+
+    print("MALLOC_LIMIT");
+    ptrtoa(MALLOC_LIMIT, str);
+    print(str);
+
+
+    print("KERNEL_STACK_START");
+    ptrtoa(KERNEL_STACK_START, str);
+    print(str);
+
+
+    print("KERNEL_STACK_END");
+    ptrtoa(KERNEL_STACK_END, str);
+    print(str);
+
+
+    print("MALLOC_START");
+    ptrtoa(MALLOC_START, str);
+    print(str);
+
+    print("HEAP_START");
+    ptrtoa(HEAP_START, str);
+    print(str);
+
+  /*  int* t = (int*) mmalloc(10);
+    int* t2 = (int*) mmalloc(10);
+    int* t3 = (int*) mmalloc(10);
+    free(t2);
+    int* t4 = (int*) mmalloc(10);
+
+    print("malloc t1");
+    ptrtoa(t, str);
+    print(str); */
+
+   /* print("malloc t2");
+    ptrtoa(t2, str);
+    print(str); */
+
+ /*   print("malloc t3");
+    ptrtoa(t3, str);
+    print(str);
+
+    print("malloc t4");
+    ptrtoa(t4, str);
+    print(str); */
+
+
+ Value *closure_0 = (Value *)idris2_mkClosure((Value *(*)())Main_kinit, 1, 1);
                                                             
   Value * var_0 = closure_0;                               
   Value *closure_1 = (Value *)idris2_mkClosure((Value *(*)())PrimIO_unsafePerformIO, 1, 1);
   ((Value_Closure*)closure_1)->args[0] = var_0;
 
 	Value_Integer *ret = (Value_Integer *)idris2_trampoline(closure_0);
-	return (size_t)mpz_get_lsb(ret->i,32);
+
+  return (size_t)mpz_get_lsb(ret->i,32);
 }
 
 // utils
@@ -71,3 +133,41 @@ char* itoa(int value, char* result, int base) {
     return result;
 }
 
+char* ptrtoa(void* ptr, char* result) {
+    uintptr_t value = (uintptr_t)ptr;  // Convertit le pointeur en entier non signé
+    char* ptr1 = result;
+    char* ptr2;
+    char tmp_char;
+
+    // On commence par écrire "0x"
+    *result++ = '0';
+    *result++ = 'x';
+
+    // Aucune valeur spéciale pour un pointeur nul ici
+    if (value == 0) {
+        *result++ = '0';
+        *result = '\0';
+        return ptr1;
+    }
+
+    ptr2 = result;
+
+    // Conversion en base 16 (hexadécimal)
+    while (value > 0) {
+        int digit = value % 16;
+        *result++ = "0123456789abcdef"[digit];
+        value /= 16;
+    }
+
+    *result = '\0';
+    result--;
+
+    // Inverser les chiffres hexadécimaux
+    while (ptr2 < result) {
+        tmp_char = *result;
+        *result-- = *ptr2;
+        *ptr2++ = tmp_char;
+    }
+
+    return ptr1;
+}
