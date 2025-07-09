@@ -20,7 +20,7 @@ main = do
   pagesRef <- getPages
   pages <- readIORef pagesRef
   println $ show $ length pages
-  println $ show pages
+  println $ show $ take 10 pages
   exit
 
 

@@ -46,10 +46,6 @@ numPages : Nat
 numPages = cast {to=Nat} $ (cast {to=Double} heapSize) / (cast {to=Double} pageSize)
 
 export
-pages : List PageBits
-pages = replicate (cast numPages) Empty
-
-export
 alloc : IORef (List PageBits) -> Nat -> IO AnyPtr
 alloc ref Z = do
   println "Cannot allocate size of 0"
@@ -167,15 +163,14 @@ export
 testPages : IO ()
 testPages = do
   println "Test pages"
-  println $ show $ length pages
-  pagesRef <- newIORef pages
+  let init_pages =  replicate (cast numPages) Empty
+  pagesRef <- newIORef init_pages
   println "Allocate 3 pages and set the first bit to 4"
   ptr <- alloc pagesRef 3
   readIORef pagesRef >>= println . show . take 10
   setPtr ptr $ cast {to=Bits8} 15
   val <- deref {a=Bits8} ptr
   println $ show val
- -- dealloc pagesRef ptr
 
   println "Allocate 4 pages and set the first bit to 2"
   ptr <- zalloc pagesRef 4
@@ -183,9 +178,8 @@ testPages = do
   setPtr ptr $ cast {to=Bits8} 2
   val <- deref {a=Bits8} ptr
   println $ show val
-  --dealloc pagesRef ptr
   savePages pagesRef
-  println "Finish test pages"
+  println "Finish test pages" 
 
 
 
