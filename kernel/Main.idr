@@ -8,9 +8,19 @@ import Uart
 
 import Data.List
 
+%export "urefc:Main_kinit"
+kinit : IO Nat
+kinit = do
+  testPages
+  pure 5
+
 main : IO ()
 main = do
   println "Welcome to PI-OS!"
+  pagesRef <- getPages
+  pages <- readIORef pagesRef
+  println $ show $ length pages
+  println $ show $ take 10 pages
   exit
 
 

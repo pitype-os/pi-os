@@ -14,7 +14,20 @@ Value* idris2_anyptr_nat(void *p) {
 // MEMORY OPERATIONS
 
 size_t idris2_heap_size() { return HEAP_SIZE; }
-size_t idris2_heap_start() { return HEAP_START; }
+char* idris2_heap_start() { return HEAP_START; }
+
+// Kernel init
+size_t kinit() {
+ Value *closure_0 = (Value *)idris2_mkClosure((Value *(*)())Main_kinit, 1, 1);
+                                                            
+  Value * var_0 = closure_0;                               
+  Value *closure_1 = (Value *)idris2_mkClosure((Value *(*)())PrimIO_unsafePerformIO, 1, 1);
+  ((Value_Closure*)closure_1)->args[0] = var_0;
+
+	Value_Integer *ret = (Value_Integer *)idris2_trampoline(closure_0);
+
+  return (size_t)mpz_get_lsb(ret->i,32);
+}
 
 // utils
 
@@ -59,3 +72,41 @@ char* itoa(int value, char* result, int base) {
     return result;
 }
 
+char* ptrtoa(void* ptr, char* result) {
+    uintptr_t value = (uintptr_t)ptr;  // Convertit le pointeur en entier non signé
+    char* ptr1 = result;
+    char* ptr2;
+    char tmp_char;
+
+    // On commence par écrire "0x"
+    *result++ = '0';
+    *result++ = 'x';
+
+    // Aucune valeur spéciale pour un pointeur nul ici
+    if (value == 0) {
+        *result++ = '0';
+        *result = '\0';
+        return ptr1;
+    }
+
+    ptr2 = result;
+
+    // Conversion en base 16 (hexadécimal)
+    while (value > 0) {
+        int digit = value % 16;
+        *result++ = "0123456789abcdef"[digit];
+        value /= 16;
+    }
+
+    *result = '\0';
+    result--;
+
+    // Inverser les chiffres hexadécimaux
+    while (ptr2 < result) {
+        tmp_char = *result;
+        *result-- = *ptr2;
+        *ptr2++ = tmp_char;
+    }
+
+    return ptr1;
+}
